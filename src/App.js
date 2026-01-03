@@ -7,7 +7,7 @@ function App() {
       <header className="App-header">
         <img src={logo} className="App-logo" alt="logo" />
         <p>
-          Edit <code>src/App.js</code> and save to reload.zfgsgsfgsdf
+          Edit <code>src/App.js</code> and save to reload. Firebase Git and React all working together :D
         </p>
         <a
           className="App-link"
