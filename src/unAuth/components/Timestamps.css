@@ -1,0 +1,25 @@
+.timestamps {
+  padding: 48px 24px;
+  background-color: #0f172a;
+}
+
+.timestamps-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.timestamps-title {
+  margin: 0 0 16px;
+  font-size: 2rem;
+  font-weight: 700;
+  color: #e5e7eb;
+}
+
+.timestamps-description {
+  margin: 0;
+  font-size: 1rem;
+  color: #9ca3af;
+  line-height: 1.6;
+}
+
