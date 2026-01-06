@@ -1,26 +1,42 @@
 import React from "react";
 import "./NavBar.css";
+import tubestampsImage from "../../assets/tubestamps.png";
 
 const NavBar = () => {
   return (
     <nav className="navbar">
       <div className="navbar-container">
-        <h2 className="navbar-logo">TubeStamp</h2>
-        <ul className="navbar-menu">
-          <li className="navbar-item">
-            <a href="#home" className="navbar-link">Home</a>
-          </li>
-          <li className="navbar-item">
-            <a href="#features" className="navbar-link">Features</a>
-          </li>
-          <li className="navbar-item">
-            <a href="#about" className="navbar-link">About</a>
-          </li>
-        </ul>
+        {/* Logo */}
+        <div className="navbar-logo">
+          <img
+            src={tubestampsImage}
+            alt="TubeStamp Logo"
+            className="logo-image"
+          />
+        </div>
+
+        {/* Right-side navigation */}
+        <div className="navbar-right">
+          <ul className="navbar-menu">
+            <li className="navbar-item">
+              <a href="#pricing" className="navbar-link">
+                Pricing
+              </a>
+            </li>
+            <li className="navbar-item">
+              <a href="#blog" className="navbar-link">
+                Blog
+              </a>
+            </li>
+          </ul>
+
+          <a href="#quote" className="quote-button">
+            Make quick time stamps with your video!
+          </a>
+        </div>
       </div>
     </nav>
   );
 };
 
 export default NavBar;
-

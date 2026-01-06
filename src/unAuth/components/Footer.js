@@ -3,15 +3,10 @@ import "./Footer.css";
 
 const Footer = () => {
   return (
-    <footer className="footer">
-      <div className="footer-container">
-        <p className="footer-text">
-          Footer component, © 2024 TubeStamp. All rights reserved.
-        </p>
-      </div>
+    <footer className="footer footer-section">
+      <p>Footer - © {new Date().getFullYear()} TubeStamp. All rights reserved.</p>
     </footer>
   );
 };
 
 export default Footer;
-

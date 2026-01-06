@@ -3,16 +3,12 @@ import "./Bumpups.css";
 
 const Bumpups = () => {
   return (
-    <section className="bumpups">
-      <div className="bumpups-container">
-        <h2 className="bumpups-title">Bumpups</h2>
-        <p className="bumpups-description">
-          Boost your content visibility and engagement.
-        </p>
-      </div>
-    </section>
+    <div className="bumpups">
+      <h1>Bumpsups</h1>
+      <h2>Boost engagement</h2>
+      <p>Highlight important moments to keep viewers watching.</p>
+    </div>
   );
 };
 
 export default Bumpups;
-

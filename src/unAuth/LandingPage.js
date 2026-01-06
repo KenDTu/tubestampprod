@@ -9,15 +9,28 @@ const LandingPage = () => {
   return (
     <div className="landing-page">
       <NavBar />
+
       <div className="landing-card">
         <h1 className="landing-title">Hello Landing Page</h1>
         <p className="landing-subtitle">
           This is a basic React landing page component. Congrats Ken!
         </p>
       </div>
-      <Timestamps />
-      <Bumpups />
-      <Footer />
+
+      {/* Timestamps section */}
+      <section className="section-container timestamps-section">
+        <Timestamps />
+      </section>
+
+      {/* Bumpups section */}
+      <section className="section-container bumpups-section">
+        <Bumpups />
+      </section>
+
+      {/* Footer section */}
+      <section className="footer-section">
+        <Footer />
+      </section>
     </div>
   );
 };
