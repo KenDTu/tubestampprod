@@ -1,13 +1,78 @@
-.timestamps-section {
-  background-color: var(--timestamps-bg);
-}
-
-.timestamps h2 {
+.timestamps h1 {
   color: var(--text-primary);
   margin-bottom: 12px;
 }
 
-.timestamps p {
+.timestamps-description {
   color: var(--text-secondary);
   line-height: 1.6;
+  margin-bottom: 28px;
+}
+
+/* =========================
+   INPUT + BUTTON ROW
+   ========================= */
+
+.url-input-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background-color: #ffffff;
+  padding: 10px;
+  border-radius: 12px;
+  border: 1px solid var(--container-border);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+/* Input */
+.url-input {
+  flex: 1;
+  border: none;
+  outline: none;
+  font-size: 15px;
+  padding: 12px 14px;
+  border-radius: 8px;
+  color: var(--text-primary);
+  background-color: transparent;
+}
+
+.url-input::placeholder {
+  color: #94a3b8;
+}
+
+/* Button */
+.generate-button {
+  background-color: #60a5fa;
+  color: #ffffff;
+  border: none;
+  padding: 12px 18px;
+  font-size: 14px;
+  font-weight: 600;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.1s ease;
+  white-space: nowrap;
+}
+
+.generate-button:hover {
+  background-color: #3b82f6;
+}
+
+.generate-button:active {
+  transform: translateY(1px);
+}
+
+/* =========================
+   RESPONSIVE
+   ========================= */
+
+@media (max-width: 640px) {
+  .url-input-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .generate-button {
+    width: 100%;
+  }
 }

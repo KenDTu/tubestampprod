@@ -11,9 +11,9 @@ const LandingPage = () => {
       <NavBar />
 
       <div className="landing-card">
-        <h1 className="landing-title">Hello Landing Page</h1>
+        <h1 className="landing-title">tubestamps.</h1>
         <p className="landing-subtitle">
-          This is a basic React landing page component. Congrats Ken!
+          The website that automatically generates your YouTube timestamps.
         </p>
       </div>
 
