@@ -1,5 +1,6 @@
 import React from "react";
 import "./LandingPage.css";
+
 import NavBar from "./components/NavBar";
 import Footer from "./components/Footer";
 import Timestamps from "./components/Timestamps";
@@ -10,6 +11,7 @@ const LandingPage = () => {
     <div className="landing-page">
       <NavBar />
 
+      {/* Hero / Landing Card */}
       <div className="landing-card">
         <h1 className="landing-title">tubestamps.</h1>
         <p className="landing-subtitle">
@@ -21,6 +23,9 @@ const LandingPage = () => {
       <section className="section-container timestamps-section">
         <Timestamps />
       </section>
+
+      {/* Section divider */}
+      <div className="section-divider" />
 
       {/* Bumpups section */}
       <section className="section-container bumpups-section">
