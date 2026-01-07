@@ -1,0 +1,154 @@
+/* =========================
+   SECTION BASE
+   ========================= */
+
+   .timestamps {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    text-align: center;
+  }
+  
+  .timestamps h1 {
+    margin: 0;
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+  
+  .timestamps-description {
+    margin: 0 auto 12px;
+    max-width: 620px;
+    font-size: 1rem;
+    line-height: 1.6;
+    color: var(--text-secondary);
+  }
+  
+  /* =========================
+     INPUT ROW
+     ========================= */
+  
+  .url-input-row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-top: 12px;
+  }
+  
+  /* =========================
+     INPUT WRAPPER (ICON + INPUT)
+     ========================= */
+  
+  .url-input-wrapper {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 16px;
+    background-color: #ffffff;
+    border-radius: 12px;
+    border: 1px solid var(--container-border);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  }
+  
+  /* Hover effect */
+  .url-input-wrapper:hover {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+  }
+  
+  /* Focus polish */
+  .url-input-wrapper:focus-within {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+  }
+  
+  /* Icon */
+  .url-icon {
+    font-size: 15px;
+    color: #94a3b8;
+    transition: color 0.2s ease;
+  }
+  
+  /* Icon turns blue on hover */
+  .url-input-wrapper:hover .url-icon {
+    color: #3b82f6;
+  }
+  
+  /* Icon turns blue on focus */
+  .url-input-wrapper:focus-within .url-icon {
+    color: #3b82f6;
+  }
+  
+  /* =========================
+     INPUT
+     ========================= */
+  
+  .url-input {
+    flex: 1;
+    border: none;
+    outline: none;
+    background: transparent;
+    font-size: 15px;
+    color: var(--text-primary);
+    padding: 0;
+  }
+  
+  .url-input::placeholder {
+    color: #94a3b8;
+  }
+  
+  /* =========================
+     GENERATE BUTTON
+     ========================= */
+  
+  .generate-button {
+    padding: 14px 22px;
+    font-size: 15px;
+    font-weight: 600;
+    color: #ffffff;
+    background-color: #60a5fa;
+    border: 1px solid var(--container-border);
+    border-radius: 12px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background-color 0.2s ease, transform 0.1s ease;
+  }
+  
+  .generate-button:hover {
+    background-color: #3b82f6;
+  }
+  
+  .generate-button:active {
+    transform: translateY(1px);
+  }
+  
+  /* =========================
+     RESPONSIVE
+     ========================= */
+  
+  @media (max-width: 640px) {
+    .url-input-row {
+      flex-direction: column;
+    }
+  
+    .generate-button {
+      width: 100%;
+    }
+  }
+  
+  /* Error state */
+.input-error {
+  border-color: #ef4444;
+}
+
+.input-error .url-icon {
+  color: #ef4444;
+}
+
+.input-error-text {
+  margin-top: 6px;
+  font-size: 0.85rem;
+  color: #ef4444;
+}

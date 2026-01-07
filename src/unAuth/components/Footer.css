@@ -1,0 +1,21 @@
+.footer-section {
+  background-color: var(--footer-bg);
+  margin-top: auto;
+}
+
+/* Footer container */
+.footer {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 16px 24px; /* 👈 reduced vertical padding */
+  text-align: center;
+  border-top: 1px solid var(--container-border);
+}
+
+/* Footer text */
+.footer p {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: 13px; /* slightly smaller */
+  line-height: 1.4;
+}

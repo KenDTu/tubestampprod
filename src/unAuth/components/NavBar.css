@@ -1,0 +1,91 @@
+/* Navbar shell */
+.navbar {
+  width: 100%;
+  background-color: var(--navbar-bg);
+  border-bottom: 1px solid var(--container-border);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+}
+
+/* Layout */
+.navbar-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 10px 24px;
+  display: flex;
+  align-items: center;
+}
+
+/* Logo */
+.navbar-logo {
+  display: flex;
+  align-items: center;
+}
+
+.logo-image {
+  height: 22px;
+  width: auto;
+  display: block;
+}
+
+/* Right-side group */
+.navbar-right {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 28px;
+}
+
+/* Menu */
+.navbar-menu {
+  list-style: none;
+  display: flex;
+  gap: 28px;
+  margin: 0;
+  padding: 0;
+}
+
+.navbar-item {
+  display: flex;
+  align-items: center;
+}
+
+.navbar-link {
+  text-decoration: none;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--text-primary);
+  line-height: 1;
+  transition: color 0.2s ease;
+}
+
+.navbar-link:hover {
+  color: var(--text-secondary);
+}
+
+/* CTA */
+.quote-button {
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-primary);
+  padding: 8px 14px;
+  border: 1.25px solid var(--text-primary);
+  border-radius: 10px;
+  line-height: 1;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+}
+
+.quote-button:hover {
+  background-color: var(--text-primary);
+  color: #ffffff;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .navbar-menu {
+    display: none;
+  }
+}
