@@ -41,11 +41,12 @@
     border-radius: var(--container-radius);
     padding: 48px 60px;
     max-width: 900px;
-    width: 100%;
+    width: calc(100% - 32px);
     text-align: center;
     box-shadow: var(--container-shadow);
     border: 1px solid var(--container-border);
     margin: 64px auto;
+    box-sizing: border-box;
   }
   
   .landing-title {
@@ -107,20 +108,38 @@
   @media (max-width: 768px) {
     .landing-card {
       padding: 32px 24px;
-      margin: 48px 16px;
+      margin: 48px auto;
+      width: calc(100% - 32px);
     }
   
     .section-container {
       padding: 32px 24px;
-      margin: 48px 16px;
+      margin: 48px auto;
+      width: calc(100% - 32px);
+      box-sizing: border-box;
     }
   
     .section-divider {
-      margin: 0 16px;
+      margin: 0 auto;
+      max-width: calc(100% - 32px);
     }
   
     .landing-title {
       font-size: 1.8rem;
+    }
+  }
+  
+  @media (max-width: 480px) {
+    .landing-card {
+      padding: 24px 20px;
+      margin: 32px auto;
+      width: calc(100% - 24px);
+    }
+  
+    .section-container {
+      padding: 24px 20px;
+      margin: 32px auto;
+      width: calc(100% - 24px);
     }
   }
   

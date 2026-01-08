@@ -31,7 +31,8 @@ const NavBar = () => {
           </ul>
 
           <a href="#quote" className="quote-button">
-            Make quick time stamps with your video!
+            <span className="quote-button-text-desktop">Make quick time stamps with your video!</span>
+            <span className="quote-button-text-mobile">Make quick time stamps with your video!</span>
           </a>
         </div>
       </div>
