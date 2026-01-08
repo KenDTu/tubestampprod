@@ -116,12 +116,17 @@
     transition: background-color 0.2s ease, transform 0.1s ease;
   }
   
-  .generate-button:hover {
+  .generate-button:hover:not(:disabled) {
     background-color: #3b82f6;
   }
   
-  .generate-button:active {
+  .generate-button:active:not(:disabled) {
     transform: translateY(1px);
+  }
+  
+  .generate-button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
   }
   
   /* =========================
@@ -139,16 +144,59 @@
   }
   
   /* Error state */
-.input-error {
-  border-color: #ef4444;
-}
+  .input-error {
+    border-color: #ef4444;
+  }
 
-.input-error .url-icon {
-  color: #ef4444;
-}
+  .input-error .url-icon {
+    color: #ef4444;
+  }
 
-.input-error-text {
-  margin-top: 4px;
-  font-size: 0.85rem;
-  color: #ef4444;
-}
+  .input-error-text {
+    margin-top: 4px;
+    font-size: 0.85rem;
+    color: #ef4444;
+  }
+
+  /* =========================
+     VIDEO PREVIEW
+     ========================= */
+
+  .video-preview {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    margin-top: 24px;
+    padding: 20px;
+  }
+
+  .video-thumbnail {
+    max-width: 100%;
+    width: 100%;
+    max-width: 640px;
+    height: auto;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    object-fit: contain;
+  }
+
+  .video-title {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    max-width: 640px;
+    line-height: 1.5;
+    word-wrap: break-word;
+  }
+
+  @media (max-width: 640px) {
+    .video-preview {
+      padding: 16px;
+    }
+
+    .video-title {
+      font-size: 1.1rem;
+    }
+  }
