@@ -3,6 +3,10 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faLink } from "@fortawesome/free-solid-svg-icons";
 import "./Timestamps.css";
 
+console.log("YOUTUBE KEY:", process.env.REACT_APP_YOUTUBE_API_KEY);
+console.log("ALL ENV:", process.env);
+
+
 const YOUTUBE_URL_REGEX =
   /^(https?:\/\/)?(www\.)?(youtube\.com\/(watch\?v=|embed\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})(\S*)?$/;
 
@@ -35,6 +39,12 @@ const Timestamps = () => {
   const fetchVideoData = async (videoId) => {
     
     const apiKey = process.env.REACT_APP_YOUTUBE_API_KEY;
+
+    if (!apiKey) {
+      setError("YouTube API key is missing. Please check your .env file.");
+      console.error("REACT_APP_YOUTUBE_API_KEY is not defined in environment variables");
+      return;
+    }
 
     setLoading(true);
     setError(null);
