@@ -16,6 +16,7 @@ const Timestamps = () => {
   const [videoData, setVideoData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [generatingTimestamps, setGeneratingTimestamps] = useState(false);
 
   // Extract video ID from YouTube URL
   const extractVideoId = (url) => {
@@ -116,6 +117,98 @@ const Timestamps = () => {
     }
   };
 
+  const handleGenerateTimestamps = async () => {
+    if (!url || !YOUTUBE_URL_REGEX.test(url)) {
+      setError("Please enter a valid YouTube URL first.");
+      return;
+    }
+
+    setGeneratingTimestamps(true);
+    setError(null);
+
+    try {
+      const projectId = process.env.REACT_APP_PROJECT_ID;
+      const region = "us-central1"; // Default region for Firebase Functions
+      
+      // Construct the Firebase Functions URL
+      // For Python gen2 functions in emulator, the format is:
+      // http://localhost:5001/PROJECT_ID/REGION/FUNCTION_NAME
+      // For production: https://REGION-PROJECT_ID.cloudfunctions.net/FUNCTION_NAME
+      const isLocal = window.location.hostname === "localhost" || process.env.REACT_APP_ENV === "local";
+      
+      // Try different URL formats for the emulator
+      let functionURL;
+      if (isLocal) {
+        // Format for Python gen2 functions in emulator
+        functionURL = `http://localhost:5001/${projectId}/${region}/generate_timestamps`;
+        console.log("[Timestamps] Using local emulator URL format");
+      } else {
+        functionURL = `https://${region}-${projectId}.cloudfunctions.net/generate_timestamps`;
+      }
+
+      console.log("[Timestamps] Calling generate_timestamps function at:", functionURL);
+      console.log("[Timestamps] Project ID:", projectId);
+      console.log("[Timestamps] Region:", region);
+      console.log("[Timestamps] Is Local:", isLocal);
+      console.log("[Timestamps] Request payload:", { url });
+      
+      // Verify emulator is accessible (for local development)
+      if (isLocal) {
+        console.log("[Timestamps] Make sure Firebase Functions emulator is running: firebase emulators:start --only functions");
+      }
+
+      // Call the Firebase function using fetch (since it's an HTTP endpoint)
+      const response = await fetch(functionURL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ url }),
+      });
+
+      // Handle non-JSON responses
+      let data;
+      const contentType = response.headers.get("content-type");
+      if (contentType && contentType.includes("application/json")) {
+        data = await response.json();
+      } else {
+        const text = await response.text();
+        console.error("[Timestamps] Non-JSON response received:", text);
+        throw new Error(`Unexpected response format. Status: ${response.status}`);
+      }
+      
+      console.log("[Timestamps] Response status:", response.status);
+      console.log("[Timestamps] Response data:", data);
+
+      if (!response.ok) {
+        throw new Error(data.error || `Request failed with status ${response.status}`);
+      }
+
+      // For now, just console.log the data as requested
+      console.log("[Timestamps] Timestamps data received:", {
+        url: data.url,
+        model: data.model,
+        language: data.language,
+        timestamps_style: data.timestamps_style,
+        timestamps_list: data.timestamps_list,
+        timestamps_string: data.timestamps_string,
+        video_duration: data.video_duration,
+      });
+
+    } catch (err) {
+      console.error("[Timestamps] Error generating timestamps:", err);
+      
+      // Provide more helpful error messages
+      if (err.message.includes("Failed to fetch") || err.message.includes("ERR_CONNECTION_REFUSED")) {
+        setError("Failed to connect to Firebase Functions. Make sure the emulator is running on port 5001.");
+      } else {
+        setError(`Failed to generate timestamps: ${err.message}`);
+      }
+    } finally {
+      setGeneratingTimestamps(false);
+    }
+  };
+
   return (
     <div className="timestamps">
       <h1>AI YouTube Timestamps</h1>
@@ -174,6 +267,14 @@ const Timestamps = () => {
             className="video-thumbnail"
           />
           <h2 className="video-title">{videoData.title}</h2>
+          <button
+            className="generate-button"
+            onClick={handleGenerateTimestamps}
+            disabled={generatingTimestamps}
+            style={{ marginTop: "20px" }}
+          >
+            {generatingTimestamps ? "Generating Timestamps..." : "Generate Timestamps"}
+          </button>
         </div>
       )}
     </div>
