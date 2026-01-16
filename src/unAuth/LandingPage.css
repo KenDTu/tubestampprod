@@ -30,6 +30,8 @@
     font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
       sans-serif;
     width: 100%;
+    overflow-x: hidden;
+    position: relative;
   }
   
   /* =========================

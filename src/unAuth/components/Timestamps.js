@@ -17,6 +17,8 @@ const Timestamps = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [generatingTimestamps, setGeneratingTimestamps] = useState(false);
+  const [timestamps, setTimestamps] = useState(null);
+  const [copied, setCopied] = useState(false);
 
   // Extract video ID from YouTube URL
   const extractVideoId = (url) => {
@@ -29,6 +31,7 @@ const Timestamps = () => {
     setUrl(value);
     setVideoData(null);
     setError(null);
+    setTimestamps(null);
 
     if (value === "") {
       setIsValid(true);
@@ -169,22 +172,42 @@ const Timestamps = () => {
       // Handle non-JSON responses
       let data;
       const contentType = response.headers.get("content-type");
+      const responseText = await response.text();
+      
       if (contentType && contentType.includes("application/json")) {
-        data = await response.json();
+        try {
+          data = JSON.parse(responseText);
+        } catch (parseError) {
+          console.error("[Timestamps] Failed to parse JSON response:", parseError);
+          console.error("[Timestamps] Response text:", responseText);
+          throw new Error(`Invalid JSON response. Status: ${response.status}. Response: ${responseText.substring(0, 200)}`);
+        }
       } else {
-        const text = await response.text();
-        console.error("[Timestamps] Non-JSON response received:", text);
-        throw new Error(`Unexpected response format. Status: ${response.status}`);
+        console.error("[Timestamps] Non-JSON response received:", responseText);
+        throw new Error(`Unexpected response format. Status: ${response.status}. Response: ${responseText.substring(0, 200)}`);
       }
       
       console.log("[Timestamps] Response status:", response.status);
       console.log("[Timestamps] Response data:", data);
 
       if (!response.ok) {
-        throw new Error(data.error || `Request failed with status ${response.status}`);
+        // Extract error message properly
+        let errorMessage = `Request failed with status ${response.status}`;
+        if (data) {
+          if (typeof data.error === 'string') {
+            errorMessage = data.error;
+          } else if (data.error && typeof data.error === 'object') {
+            errorMessage = data.error.message || JSON.stringify(data.error);
+          } else if (typeof data.message === 'string') {
+            errorMessage = data.message;
+          } else if (typeof data === 'string') {
+            errorMessage = data;
+          }
+        }
+        throw new Error(errorMessage);
       }
 
-      // For now, just console.log the data as requested
+      // Store timestamps in state for display
       console.log("[Timestamps] Timestamps data received:", {
         url: data.url,
         model: data.model,
@@ -195,18 +218,82 @@ const Timestamps = () => {
         video_duration: data.video_duration,
       });
 
+      // Store timestamps for display
+      if (data.timestamps_list && Array.isArray(data.timestamps_list) && data.timestamps_list.length > 0) {
+        setTimestamps(data.timestamps_list);
+      } else if (data.timestamps_string) {
+        // Fallback: parse timestamps_string if timestamps_list is not available
+        // Split by newlines and create timestamp objects
+        const lines = data.timestamps_string.split('\n').filter(line => line.trim());
+        const parsedTimestamps = lines.map(line => {
+          // Try to extract timestamp pattern (e.g., "00:01:23 - Description")
+          const timestampMatch = line.match(/^(\d{1,2}:\d{2}(?::\d{2})?)\s*[-–—]\s*(.+)$/);
+          if (timestampMatch) {
+            return {
+              timestamp: timestampMatch[1],
+              description: timestampMatch[2].trim()
+            };
+          }
+          // If no timestamp pattern, treat entire line as description
+          return { description: line.trim() };
+        });
+        setTimestamps(parsedTimestamps.length > 0 ? parsedTimestamps : [{ description: data.timestamps_string }]);
+      } else {
+        setTimestamps([]);
+      }
+
     } catch (err) {
       console.error("[Timestamps] Error generating timestamps:", err);
       
+      // Extract error message properly
+      let errorMessage = "An unknown error occurred";
+      if (err instanceof Error) {
+        errorMessage = err.message;
+      } else if (typeof err === 'string') {
+        errorMessage = err;
+      } else if (err && typeof err === 'object') {
+        errorMessage = err.message || err.error || JSON.stringify(err);
+      }
+      
       // Provide more helpful error messages
-      if (err.message.includes("Failed to fetch") || err.message.includes("ERR_CONNECTION_REFUSED")) {
+      if (errorMessage.includes("Failed to fetch") || errorMessage.includes("ERR_CONNECTION_REFUSED") || errorMessage.includes("NetworkError")) {
         setError("Failed to connect to Firebase Functions. Make sure the emulator is running on port 5001.");
       } else {
-        setError(`Failed to generate timestamps: ${err.message}`);
+        setError(`Failed to generate timestamps: ${errorMessage}`);
       }
     } finally {
       setGeneratingTimestamps(false);
     }
+  };
+
+  const handleCopyTimestamps = () => {
+    if (!timestamps || timestamps.length === 0) return;
+
+    // Format timestamps as a string with each timestamp on a new line
+    const timestampText = timestamps
+      .map((ts) => {
+        if (ts.timestamp && ts.description) {
+          return `${ts.timestamp} - ${ts.description}`;
+        } else if (ts.timestamp && ts.text) {
+          return `${ts.timestamp} - ${ts.text}`;
+        } else if (ts.timestamp) {
+          return ts.timestamp;
+        } else if (ts.description) {
+          return ts.description;
+        } else if (ts.text) {
+          return ts.text;
+        }
+        return JSON.stringify(ts);
+      })
+      .join('\n');
+
+    navigator.clipboard.writeText(timestampText).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }).catch((err) => {
+      console.error('Failed to copy timestamps:', err);
+      setError('Failed to copy timestamps to clipboard');
+    });
   };
 
   return (
@@ -275,6 +362,53 @@ const Timestamps = () => {
           >
             {generatingTimestamps ? "Generating Timestamps..." : "Generate Timestamps"}
           </button>
+          
+          {timestamps && timestamps.length > 0 && (
+            <div className="timestamps-display">
+              <div className="timestamps-header">
+                <h3 className="timestamps-heading">Timestamps</h3>
+                <button
+                  className="copy-button"
+                  onClick={handleCopyTimestamps}
+                  title="Copy all timestamps"
+                >
+                  {copied ? "Copied!" : "Copy"}
+                </button>
+              </div>
+              <div className="timestamps-list">
+                {timestamps.map((timestamp, index) => (
+                  <div key={index} className="timestamp-item">
+                    {timestamp.timestamp && timestamp.description && (
+                      <span className="timestamp-line">
+                        <span className="timestamp-time">{timestamp.timestamp}</span>
+                        <span className="timestamp-separator"> - </span>
+                        <span className="timestamp-description">{timestamp.description}</span>
+                      </span>
+                    )}
+                    {timestamp.timestamp && timestamp.text && (
+                      <span className="timestamp-line">
+                        <span className="timestamp-time">{timestamp.timestamp}</span>
+                        <span className="timestamp-separator"> - </span>
+                        <span className="timestamp-description">{timestamp.text}</span>
+                      </span>
+                    )}
+                    {timestamp.timestamp && !timestamp.description && !timestamp.text && (
+                      <span className="timestamp-time">{timestamp.timestamp}</span>
+                    )}
+                    {!timestamp.timestamp && timestamp.description && (
+                      <span className="timestamp-description">{timestamp.description}</span>
+                    )}
+                    {!timestamp.timestamp && timestamp.text && (
+                      <span className="timestamp-description">{timestamp.text}</span>
+                    )}
+                    {!timestamp.timestamp && !timestamp.description && !timestamp.text && (
+                      <span className="timestamp-description">{JSON.stringify(timestamp)}</span>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>
