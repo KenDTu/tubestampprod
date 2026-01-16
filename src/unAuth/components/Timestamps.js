@@ -295,7 +295,7 @@ const Timestamps = () => {
       setError('Failed to copy timestamps to clipboard');
     });
   };
-
+//asdfasdfgit
   return (
     <div className="timestamps">
       <h1>AI YouTube Timestamps</h1>
