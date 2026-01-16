@@ -1,12 +1,16 @@
-import React from "react";
+import React, { useState } from "react";
 import "./LandingPage.css";
 
 import NavBar from "./components/NavBar";
 import Footer from "./components/Footer";
 import Timestamps from "./components/Timestamps";
+import VideoList from "./components/timestampcomp/VideoList";
 import Bumpups from "./components/Bumpups";
 
 const LandingPage = () => {
+  const [url, setUrl] = useState("");
+  const [videoData, setVideoData] = useState(null);
+
   return (
     <div className="landing-page">
       <NavBar />
@@ -21,8 +25,15 @@ const LandingPage = () => {
 
       {/* Timestamps section */}
       <section className="section-container timestamps-section">
-        <Timestamps />
+        <Timestamps url={url} setUrl={setUrl} videoData={videoData} setVideoData={setVideoData} />
       </section>
+
+      {/* Generated Timestamps section */}
+      {videoData && (
+        <section className="section-container timestamps-section generated-timestamps-section">
+          <VideoList url={url} videoData={videoData} />
+        </section>
+      )}
 
       {/* Section divider */}
       <div className="section-divider" />

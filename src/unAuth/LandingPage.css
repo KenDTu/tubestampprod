@@ -102,6 +102,10 @@
   .bumpups-section {
     background-color: var(--bumpups-bg);
   }
+
+  .generated-timestamps-section {
+    background-color: var(--timestamps-bg);
+  }
   
   /* =========================
      RESPONSIVE
