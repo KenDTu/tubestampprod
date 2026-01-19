@@ -6,6 +6,7 @@ import json
 import os
 import traceback
 import requests
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from firebase_functions import https_fn
 from firebase_functions.options import set_global_options
 from firebase_admin import initialize_app
@@ -27,6 +28,43 @@ CORS_HEADERS = {
     "Access-Control-Allow-Methods": "POST, OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type"
 }
+
+
+def call_bumpups_api(youtube_url, api_key):
+    """
+    Helper function to make a single call to Bumpups API.
+    Returns tuple: (success: bool, data: dict or None, error: str or None)
+    """
+    payload = {
+        "url": youtube_url,
+        "model": "bump-1.0",
+        "language": "en",
+        "timestamps_style": "long"
+    }
+    
+    headers = {
+        "Content-Type": "application/json",
+        "X-Api-Key": api_key
+    }
+    
+    try:
+        print(f"[call_bumpups_api] Making request for URL: {youtube_url}")
+        response = requests.post(
+            BUMPUPS_API_URL,
+            json=payload,
+            headers=headers,
+            timeout=60
+        )
+        
+        if response.status_code == 200:
+            return (True, response.json(), None)
+        else:
+            error_msg = f"Bumpups API returned status {response.status_code}: {response.text[:200]}"
+            return (False, None, error_msg)
+    except requests.exceptions.Timeout:
+        return (False, None, "Request to Bumpups API timed out after 60 seconds")
+    except Exception as e:
+        return (False, None, f"Error calling Bumpups API: {str(e)}")
 
 
 @https_fn.on_request()
@@ -68,20 +106,6 @@ def generate_timestamps(req: https_fn.Request) -> https_fn.Response:
 
         print(f"[generate_timestamps] Request data received: {json.dumps(request_data)}")
 
-        # Extract YouTube URL
-        youtube_url = request_data.get("url")
-        
-        if not youtube_url:
-            print("[generate_timestamps] Error: Missing required field 'url'")
-            headers = {**CORS_HEADERS, "Content-Type": "application/json"}
-            return https_fn.Response(
-                json.dumps({"error": "Missing required field: url"}),
-                status=400,
-                headers=headers
-            )
-
-        print(f"[generate_timestamps] Processing YouTube URL: {youtube_url}")
-
         # Get API key from environment
         api_key = os.environ.get("BUMPUPS_API_KEY")
         
@@ -96,75 +120,120 @@ def generate_timestamps(req: https_fn.Request) -> https_fn.Response:
 
         print("[generate_timestamps] API key found in environment")
 
-        # Prepare request payload with defaults
-        payload = {
-            "url": youtube_url,
-            "model": "bump-1.0",
-            "language": "en",
-            "timestamps_style": "long"
-        }
-
-        print(f"[generate_timestamps] Preparing request to Bumpups API with payload: {json.dumps(payload)}")
-
-        # Make request to Bumpups API
-        headers = {
-            "Content-Type": "application/json",
-            "X-Api-Key": api_key
-        }
-
-        print(f"[generate_timestamps] Making POST request to {BUMPUPS_API_URL}")
-        response = requests.post(
-            BUMPUPS_API_URL,
-            json=payload,
-            headers=headers,
-            timeout=60  # 60 second timeout for API calls
-        )
-
-        print(f"[generate_timestamps] Bumpups API response status: {response.status_code}")
-
-        # Handle API response
-        if response.status_code == 200:
-            print("[generate_timestamps] Successfully received timestamps from Bumpups API")
-            try:
-                response_data = response.json()
-                timestamp_count = len(response_data.get("timestamps_list", []))
-                print(f"[generate_timestamps] Timestamps generated: {timestamp_count} timestamps found")
-            except:
-                print("[generate_timestamps] Could not parse response JSON, but status is 200")
+        # Check if request contains single URL or array of URLs (batch mode)
+        youtube_url = request_data.get("url")
+        youtube_urls = request_data.get("urls")  # Array for batch requests
+        
+        # Support both single URL (backward compatible) and batch URLs
+        if youtube_urls and isinstance(youtube_urls, list):
+            # BATCH MODE: Process multiple URLs in parallel
+            print(f"[generate_timestamps] BATCH MODE: Processing {len(youtube_urls)} URLs")
             
+            if len(youtube_urls) == 0:
+                headers = {**CORS_HEADERS, "Content-Type": "application/json"}
+                return https_fn.Response(
+                    json.dumps({"error": "Empty 'urls' array provided"}),
+                    status=400,
+                    headers=headers
+                )
+            
+            # Process all URLs in parallel using ThreadPoolExecutor
+            results = []
+            errors = []
+            
+            # Limit concurrent requests to avoid overwhelming the API
+            max_workers = min(5, len(youtube_urls))  # Process up to 5 URLs concurrently
+            
+            with ThreadPoolExecutor(max_workers=max_workers) as executor:
+                # Submit all tasks
+                future_to_url = {
+                    executor.submit(call_bumpups_api, url, api_key): url 
+                    for url in youtube_urls
+                }
+                
+                # Collect results as they complete
+                for future in as_completed(future_to_url):
+                    url = future_to_url[future]
+                    try:
+                        success, data, error = future.result()
+                        if success:
+                            data["url"] = url  # Ensure URL is in response
+                            results.append(data)
+                            print(f"[generate_timestamps] Successfully processed URL: {url}")
+                        else:
+                            errors.append({"url": url, "error": error})
+                            print(f"[generate_timestamps] Error processing URL {url}: {error}")
+                    except Exception as e:
+                        errors.append({"url": url, "error": str(e)})
+                        print(f"[generate_timestamps] Exception processing URL {url}: {str(e)}")
+            
+            # Return batch response
+            batch_response = {
+                "batch": True,
+                "total_requests": len(youtube_urls),
+                "successful": len(results),
+                "failed": len(errors),
+                "results": results,
+                "errors": errors if errors else None
+            }
+            
+            # If only one URL was processed and it succeeded, return it in the original format for compatibility
+            if len(youtube_urls) == 1 and len(results) == 1 and len(errors) == 0:
+                headers = {**CORS_HEADERS, "Content-Type": "application/json"}
+                return https_fn.Response(
+                    json.dumps(results[0]),
+                    status=200,
+                    headers=headers
+                )
+            
+            # Return batch results
+            status_code = 200 if len(errors) == 0 else 207  # 207 = Multi-Status
             headers = {**CORS_HEADERS, "Content-Type": "application/json"}
             return https_fn.Response(
-                response.text,
-                status=200,
+                json.dumps(batch_response),
+                status=status_code,
                 headers=headers
             )
+        
+        elif youtube_url:
+            # SINGLE URL MODE: Original behavior (backward compatible)
+            print(f"[generate_timestamps] SINGLE URL MODE: Processing URL: {youtube_url}")
+            
+            success, data, error = call_bumpups_api(youtube_url, api_key)
+            
+            if success:
+                print("[generate_timestamps] Successfully received timestamps from Bumpups API")
+                try:
+                    timestamp_count = len(data.get("timestamps_list", []))
+                    print(f"[generate_timestamps] Timestamps generated: {timestamp_count} timestamps found")
+                except:
+                    print("[generate_timestamps] Could not parse response JSON, but status is 200")
+                
+                headers = {**CORS_HEADERS, "Content-Type": "application/json"}
+                return https_fn.Response(
+                    json.dumps(data),
+                    status=200,
+                    headers=headers
+                )
+            else:
+                # Return error response
+                print(f"[generate_timestamps] Error: {error}")
+                headers = {**CORS_HEADERS, "Content-Type": "application/json"}
+                return https_fn.Response(
+                    json.dumps({"error": error}),
+                    status=500,
+                    headers=headers
+                )
         else:
-            # Forward the error from Bumpups API
-            print(f"[generate_timestamps] Bumpups API returned error: {response.status_code}")
-            print(f"[generate_timestamps] Error response body: {response.text[:500]}")
+            # Neither 'url' nor 'urls' provided
+            print("[generate_timestamps] Error: Missing required field 'url' or 'urls'")
             headers = {**CORS_HEADERS, "Content-Type": "application/json"}
             return https_fn.Response(
-                response.text,
-                status=response.status_code,
+                json.dumps({"error": "Missing required field: 'url' (string) or 'urls' (array)"}),
+                status=400,
                 headers=headers
             )
 
-    except requests.exceptions.Timeout:
-        print("[generate_timestamps] Error: Request to Bumpups API timed out after 60 seconds")
-        headers = {**CORS_HEADERS, "Content-Type": "application/json"}
-        return https_fn.Response(
-            json.dumps({"error": "Request to Bumpups API timed out"}),
-            status=504,
-            headers=headers
-        )
-    except requests.exceptions.RequestException as e:
-        print(f"[generate_timestamps] RequestException occurred: {str(e)}")
-        headers = {**CORS_HEADERS, "Content-Type": "application/json"}
-        return https_fn.Response(
-            json.dumps({"error": f"Error calling Bumpups API: {str(e)}"}),
-            status=500,
-            headers=headers
-        )
     except Exception as e:
         print(f"[generate_timestamps] Unexpected error: {type(e).__name__}: {str(e)}")
         print(f"[generate_timestamps] Traceback: {traceback.format_exc()}")

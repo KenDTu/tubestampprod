@@ -29,6 +29,10 @@
   cursor: pointer;
   white-space: nowrap;
   transition: background-color 0.2s ease, transform 0.1s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
 }
 
 .generate-button:hover:not(:disabled) {
@@ -42,6 +46,20 @@
 .generate-button:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+.hammer-icon {
+  animation: hammerSwing 0.6s ease-in-out infinite;
+  transform-origin: center top;
+}
+
+@keyframes hammerSwing {
+  0%, 100% {
+    transform: rotate(-15deg);
+  }
+  50% {
+    transform: rotate(15deg);
+  }
 }
 
 .input-error-text {

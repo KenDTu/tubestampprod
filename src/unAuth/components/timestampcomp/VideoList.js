@@ -1,14 +1,34 @@
 import React, { useState, useEffect } from "react";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faHammer } from "@fortawesome/free-solid-svg-icons";
 import StampPop from "./StampPop";
+import History from "../History";
 import "./VideoList.css";
 
 const YOUTUBE_URL_REGEX =
   /^(https?:\/\/)?(www\.)?(youtube\.com\/(watch\?v=|embed\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})(\S*)?$/;
 
-const VideoList = ({ url, videoData }) => {
+const VideoList = ({ url, videoData, setUrl, setVideoData }) => {
   const [generatingTimestamps, setGeneratingTimestamps] = useState(false);
   const [timestamps, setTimestamps] = useState(null);
   const [error, setError] = useState(null);
+
+  // Check history before making API call
+  const checkHistory = (videoUrl) => {
+    try {
+      const stored = localStorage.getItem("youtube_timestamps_history");
+      if (stored) {
+        const items = JSON.parse(stored);
+        const historyItem = items.find(item => item.url === videoUrl);
+        if (historyItem) {
+          return historyItem;
+        }
+      }
+    } catch (err) {
+      console.error("Error checking history:", err);
+    }
+    return null;
+  };
 
   const handleGenerateTimestamps = async () => {
     if (!url || !YOUTUBE_URL_REGEX.test(url)) {
@@ -16,6 +36,16 @@ const VideoList = ({ url, videoData }) => {
       return;
     }
 
+    // Check history first - if found, load from history instead of making API call
+    const historyItem = checkHistory(url);
+    if (historyItem) {
+      console.log("[VideoList] Loading timestamps from history for:", url);
+      setTimestamps(historyItem.timestamps);
+      setError(null);
+      return;
+    }
+
+    // Not in history, make API call
     setGeneratingTimestamps(true);
     setError(null);
 
@@ -156,11 +186,14 @@ const VideoList = ({ url, videoData }) => {
     }
   };
 
-  // Reset timestamps when URL or videoData changes
-  useEffect(() => {
-    setTimestamps(null);
+  // Handle loading from history
+  const handleLoadHistory = (historyUrl, historyVideoData, historyTimestamps) => {
+    // Set all state values together - timestamps will be preserved
+    setUrl(historyUrl);
+    setVideoData(historyVideoData);
+    setTimestamps(historyTimestamps);
     setError(null);
-  }, [url, videoData]);
+  };
 
   return (
     <div className="video-list">
@@ -171,7 +204,14 @@ const VideoList = ({ url, videoData }) => {
             onClick={handleGenerateTimestamps}
             disabled={generatingTimestamps}
           >
-            {generatingTimestamps ? "Generating Timestamps..." : "Generate Timestamps"}
+            {generatingTimestamps ? (
+              <>
+                <FontAwesomeIcon icon={faHammer} className="hammer-icon" />
+                <span>Generating Timestamps...</span>
+              </>
+            ) : (
+              "Generate Timestamps"
+            )}
           </button>
 
           {error && (
@@ -183,6 +223,13 @@ const VideoList = ({ url, videoData }) => {
           {timestamps && timestamps.length > 0 && (
             <StampPop timestamps={timestamps} />
           )}
+
+          <History
+            url={url}
+            videoData={videoData}
+            timestamps={timestamps}
+            onLoadHistory={handleLoadHistory}
+          />
         </div>
       )}
     </div>

@@ -31,7 +31,7 @@ const LandingPage = () => {
       {/* Generated Timestamps section */}
       {videoData && (
         <section className="section-container timestamps-section generated-timestamps-section">
-          <VideoList url={url} videoData={videoData} />
+          <VideoList url={url} videoData={videoData} setUrl={setUrl} setVideoData={setVideoData} />
         </section>
       )}
 
