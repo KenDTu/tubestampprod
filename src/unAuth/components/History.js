@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import "./History.css";
 
 const STORAGE_KEY = "youtube_timestamps_history";
@@ -9,16 +9,16 @@ const History = ({ url, videoData, timestamps, onLoadHistory }) => {
   // Load history from localStorage on mount
   useEffect(() => {
     loadHistory();
-  }, []);
+  }, [loadHistory]);
 
   // Save to history when new timestamps are generated
   useEffect(() => {
     if (url && videoData && timestamps && timestamps.length > 0) {
       saveToHistory(url, videoData, timestamps);
     }
-  }, [url, videoData, timestamps]);
+  }, [url, videoData, timestamps, saveToHistory]);
 
-  const loadHistory = () => {
+  const loadHistory = useCallback(() => {
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
       if (stored) {
@@ -30,9 +30,9 @@ const History = ({ url, videoData, timestamps, onLoadHistory }) => {
     } catch (err) {
       console.error("Error loading history:", err);
     }
-  };
+  }, []);
 
-  const saveToHistory = (videoUrl, videoInfo, timestampList) => {
+  const saveToHistory = useCallback((videoUrl, videoInfo, timestampList) => {
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
       let items = stored ? JSON.parse(stored) : [];
@@ -68,7 +68,7 @@ const History = ({ url, videoData, timestamps, onLoadHistory }) => {
     } catch (err) {
       console.error("Error saving to history:", err);
     }
-  };
+  }, [loadHistory]);
 
   const deleteFromHistory = (videoUrl) => {
     try {
