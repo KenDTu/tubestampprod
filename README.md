@@ -8,4 +8,6 @@ Overall, this project taught me a lot about software development, client facing 
 
 Building on from this product I would expand by enabling Google AdSense and user authentication through RECAPTCHA as well as learning to develop my own custom toolkit which provides the user value. 
 
+DOTHIS: Download the raw file from the WATCHME.mp4 file to see the website in action.
+
 Ken Tu 19/01/2025
