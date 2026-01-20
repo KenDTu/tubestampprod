@@ -4,3 +4,7 @@ __pycache__/
 # Python virtual environment
 venv/
 *.local
+
+# Firebase debug logs
+firebase-debug.log*
+firebase-debug.*.log
