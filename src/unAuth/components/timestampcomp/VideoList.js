@@ -57,14 +57,19 @@ const VideoList = ({ url, videoData, setUrl, setVideoData }) => {
       // For Python gen2 functions in emulator, the format is:
       // http://localhost:5001/PROJECT_ID/REGION/FUNCTION_NAME
       // For production: https://REGION-PROJECT_ID.cloudfunctions.net/FUNCTION_NAME
-      const isLocal = window.location.hostname === "localhost" || process.env.REACT_APP_ENV === "local";
+      const isLocal = window.location.hostname === "localhost" || 
+                     window.location.hostname === "127.0.0.1" ||
+                     process.env.REACT_APP_ENV === "local";
       
       // Try different URL formats for the emulator
       let functionURL;
       if (isLocal) {
         // Format for Python gen2 functions in emulator
+        // Try the standard emulator format first
         functionURL = `http://localhost:5001/${projectId}/${region}/generate_timestamps`;
-        console.log("[VideoList] Using local emulator URL format");
+        console.log("[VideoList] Using local emulator URL format:", functionURL);
+        console.log("[VideoList] Make sure Firebase Functions emulator is running:");
+        console.log("[VideoList]   firebase emulators:start --only functions");
       } else {
         functionURL = `https://${region}-${projectId}.cloudfunctions.net/generate_timestamps`;
       }
@@ -75,11 +80,6 @@ const VideoList = ({ url, videoData, setUrl, setVideoData }) => {
       console.log("[VideoList] Is Local:", isLocal);
       console.log("[VideoList] Request payload:", { url });
       
-      // Verify emulator is accessible (for local development)
-      if (isLocal) {
-        console.log("[VideoList] Make sure Firebase Functions emulator is running: firebase emulators:start --only functions");
-      }
-
       // Call the Firebase function using fetch (since it's an HTTP endpoint)
       const response = await fetch(functionURL, {
         method: "POST",
@@ -87,6 +87,20 @@ const VideoList = ({ url, videoData, setUrl, setVideoData }) => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({ url }),
+        // Add mode to handle CORS
+        mode: "cors",
+      }).catch((fetchError) => {
+        // Provide more detailed error information
+        console.error("[VideoList] Fetch error details:", fetchError);
+        if (isLocal) {
+          throw new Error(
+            `Failed to connect to Firebase Functions emulator at ${functionURL}. ` +
+            `Make sure the emulator is running: firebase emulators:start --only functions. ` +
+            `Error: ${fetchError.message}`
+          );
+        } else {
+          throw new Error(`Failed to connect to Firebase Functions: ${fetchError.message}`);
+        }
       });
 
       // Handle non-JSON responses
@@ -176,8 +190,22 @@ const VideoList = ({ url, videoData, setUrl, setVideoData }) => {
       }
       
       // Provide more helpful error messages
-      if (errorMessage.includes("Failed to fetch") || errorMessage.includes("ERR_CONNECTION_REFUSED") || errorMessage.includes("NetworkError")) {
-        setError("Failed to connect to Firebase Functions. Make sure the emulator is running on port 5001.");
+      if (errorMessage.includes("Failed to fetch") || 
+          errorMessage.includes("ERR_CONNECTION_REFUSED") || 
+          errorMessage.includes("NetworkError") ||
+          errorMessage.includes("Failed to connect to Firebase Functions emulator")) {
+        const isLocal = window.location.hostname === "localhost" || 
+                       window.location.hostname === "127.0.0.1" ||
+                       process.env.REACT_APP_ENV === "local";
+        if (isLocal) {
+          setError(
+            "Failed to connect to Firebase Functions emulator. " +
+            "Make sure the emulator is running on port 5001. " +
+            "Run: firebase emulators:start --only functions"
+          );
+        } else {
+          setError("Failed to connect to Firebase Functions. Please try again later.");
+        }
       } else {
         setError(`Failed to generate timestamps: ${errorMessage}`);
       }

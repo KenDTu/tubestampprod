@@ -27,5 +27,14 @@
       "source": "functions",
       "runtime": "python312"
     }
-  ]
+  ],
+  "emulators": {
+    "functions": {
+      "port": 5001
+    },
+    "ui": {
+      "enabled": true,
+      "port": 4000
+    }
+  }
 }

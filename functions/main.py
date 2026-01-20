@@ -67,7 +67,7 @@ def call_bumpups_api(youtube_url, api_key):
         return (False, None, f"Error calling Bumpups API: {str(e)}")
 
 
-@https_fn.on_request()
+@https_fn.on_request(region="us-central1")
 def generate_timestamps(req: https_fn.Request) -> https_fn.Response:
     """
     Generate timestamps for a YouTube video using the Bumpups API.
